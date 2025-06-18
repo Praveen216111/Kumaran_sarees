@@ -3,6 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import os
 import platform
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, template_folder="../templates", static_folder="../static")
 # Use platform-specific database path
@@ -17,12 +22,13 @@ app.config['UPLOAD_FOLDER'] = '/tmp/shorts' if platform.system() != "Windows" el
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # Max 100MB
 db = SQLAlchemy(app)
 
-# Check if upload folder exists without creating it
+# Check if upload folder exists
 if platform.system() != "Windows" and not os.path.exists(app.config['UPLOAD_FOLDER']):
     try:
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        logger.debug(f"Created upload folder: {app.config['UPLOAD_FOLDER']}")
     except OSError as e:
-        print(f"Failed to create upload folder: {e}")
+        logger.error(f"Failed to create upload folder: {e}")
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -39,67 +45,88 @@ class Short(db.Model):
     uploaded_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_name = db.Column(db.String(100), nullable=False)
 
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    # Delete shorts older than 24 hours
-    expiry_time = datetime.utcnow() - timedelta(hours=24)
-    old_shorts = Short.query.filter(Short.uploaded_at < expiry_time).all()
-    for short in old_shorts:
-        try:
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], os.path.basename(short.video_path))
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        except:
-            pass
-        db.session.delete(short)
-    db.session.commit()
-
-    # Check if max 10 shorts reached for today
-    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    daily_shorts = Short.query.filter(Short.uploaded_at >= today).count()
-    can_upload = daily_shorts < 10
-
-    # Handle video upload
-    if request.method == 'POST' and 'video' in request.files and can_upload:
-        video = request.files['video']
-        user_name = request.form.get('user_name')
-        if video and user_name:
-            if video.filename.endswith('.mp4'):
-                filename = f"short_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{video.filename}"
-                video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                try:
-                    video.save(video_path)
-                    # Store relative path for DB
-                    db_path = f"/shorts/{filename}" if platform.system() != "Windows" else f"/static/shorts/{filename}"
-                    new_short = Short(video_path=db_path, user_name=user_name)
-                    db.session.add(new_short)
-                    db.session.commit()
-                    flash('Short uploaded successfully!', 'success')
-                except OSError as e:
-                    flash(f'Upload failed: {e}', 'error')
-            else:
-                flash('Only MP4 videos allowed!', 'error')
-        else:
-            flash('Please provide a name and video!', 'error')
-        return redirect(url_for('home'))
-
-    # Get categories and featured products
-    categories = db.session.query(Product.category).distinct().all()
-    categories = [cat[0] for cat in categories]
-    featured_products = Product.query.limit(4).all()
-    shorts = Short.query.order_by(Short.uploaded_at.desc()).all()
-
-    return render_template('index.html', categories=categories, featured_products=featured_products, shorts=shorts, can_upload=can_upload)
-
-if __name__ == '__main__':
-    with app.app_context():
+# Initialize database before first request
+with app.app_context():
+    try:
+        logger.debug("Creating database tables")
         db.create_all()
         if not Product.query.first():
             db.session.add_all([
-                Product(name="Red Banarasi Saree", category="Saree", fabric="searasa", price=5000, stock=10, image_path="/static/images/products/red_banarasi.jpg"),
+                Product(name="Red Banarasi Saree", category="Saree", fabric="Silk", price=5000, stock=10, image_path="/static/images/products/red_banarasi.jpg"),
                 Product(name="Blue Cotton Chudi", category="Chudi", fabric="Cotton", price=1500, stock=25, image_path="/static/images/products/blue_chudi.jpg"),
-                Product(name="White Nighty", category="Nightyila", fabric="Cotton", price=800, stock=15, image_path="/static/images/products/white_nighty.jpg"),
-                Product(name="Embroidered Blouse", category="Blouse", fabric="searasa", price=1200, stock=8, image_path="/static/images/products/embroidered_blouse.jpg")
+                Product(name="White Nighty", category="Nighty", fabric="Cotton", price=800, stock=15, image_path="/static/images/products/white_nighty.jpg"),
+                Product(name="Embroidered Blouse", category="Blouse", fabric="Silk", price=1200, stock=8, image_path="/static/images/products/embroidered_blouse.jpg")
             ])
             db.session.commit()
+            logger.debug("Added sample products")
+    except Exception as e:
+        logger.error(f"Database initialization error: {e}")
+
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    try:
+        logger.debug("Entering home route")
+        # Delete shorts older than 24 hours
+        expiry_time = datetime.utcnow() - timedelta(hours=24)
+        old_shorts = Short.query.filter(Short.uploaded_at < expiry_time).all()
+        logger.debug(f"Found {len(old_shorts)} old shorts")
+        for short in old_shorts:
+            try:
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], os.path.basename(short.video_path))
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    logger.debug(f"Deleted file: {file_path}")
+            except Exception as e:
+                logger.error(f"Error deleting short: {e}")
+            db.session.delete(short)
+        db.session.commit()
+        logger.debug("Deleted old shorts")
+
+        # Check if max 10 shorts reached for today
+        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        daily_shorts = Short.query.filter(Short.uploaded_at >= today).count()
+        can_upload = daily_shorts < 10
+        logger.debug(f"Daily shorts: {daily_shorts}, Can upload: {can_upload}")
+
+        # Handle video upload
+        if request.method == 'POST' and 'video' in request.files and can_upload:
+            video = request.files['video']
+            user_name = request.form.get('user_name')
+            logger.debug(f"Video upload attempt: {video.filename if video else 'None'}, User: {user_name}")
+            if video and user_name:
+                if video.filename.endswith('.mp4'):
+                    filename = f"short_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{video.filename}"
+                    video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    try:
+                        video.save(video_path)
+                        db_path = f"/shorts/{filename}" if platform.system() != "Windows" else f"/static/shorts/{filename}"
+                        new_short = Short(video_path=db_path, user_name=user_name)
+                        db.session.add(new_short)
+                        db.session.commit()
+                        logger.debug(f"Uploaded short: {db_path}")
+                        flash('Short uploaded successfully!', 'success')
+                    except Exception as e:
+                        logger.error(f"Upload failed: {e}")
+                        flash(f'Upload failed: {e}', 'error')
+                else:
+                    flash('Only MP4 videos allowed!', 'error')
+            else:
+                flash('Please provide a name and video!', 'error')
+            return redirect(url_for('home'))
+
+        # Get categories and featured products
+        categories = db.session.query(Product.category).distinct().all()
+        categories = [cat[0] for cat in categories]
+        logger.debug(f"Categories: {categories}")
+        featured_products = Product.query.limit(4).all()
+        logger.debug(f"Featured products: {len(featured_products)}")
+        shorts = Short.query.order_by(Short.uploaded_at.desc()).all()
+        logger.debug(f"Shorts: {len(shorts)}")
+
+        return render_template('index.html', categories=categories, featured_products=featured_products, shorts=shorts, can_upload=can_upload)
+    except Exception as e:
+        logger.error(f"Error in home route: {e}")
+        raise
+
+if __name__ == '__main__':
     app.run(debug=True)
