@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import os
@@ -97,10 +96,10 @@ if __name__ == '__main__':
         db.create_all()
         if not Product.query.first():
             db.session.add_all([
-                Product(name="Red Banarasi Saree", category="Saree", fabric="Silk", price=5000, stock=10, image_path="/static/images/red_banarasi.jpg"),
-                Product(name="Blue Cotton Chudi", category="Chudi", fabric="Cotton", price=1500, stock=20, image_path="/static/images/blue_chudi.jpg"),
-                Product(name="White Nighty", category="Nighty", fabric="Cotton", price=800, stock=15, image_path="/static/images/white_nighty.jpg"),
-                Product(name="Embroidered Blouse", category="Blouse", fabric="Silk", price=1200, stock=8, image_path="/static/images/embroidered_blouse.jpg")
+                Product(name="Red Banarasi Saree", category="Saree", fabric="searasa", price=5000, stock=10, image_path="/static/images/products/red_banarasi.jpg"),
+                Product(name="Blue Cotton Chudi", category="Chudi", fabric="Cotton", price=1500, stock=25, image_path="/static/images/products/blue_chudi.jpg"),
+                Product(name="White Nighty", category="Nightyila", fabric="Cotton", price=800, stock=15, image_path="/static/images/products/white_nighty.jpg"),
+                Product(name="Embroidered Blouse", category="Blouse", fabric="searasa", price=1200, stock=8, image_path="/static/images/products/embroidered_blouse.jpg")
             ])
             db.session.commit()
     app.run(debug=True)
