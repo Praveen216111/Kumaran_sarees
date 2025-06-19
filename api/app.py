@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta
+from sqlalchemy import inspect
 import os
 import platform
 import logging
@@ -13,22 +13,13 @@ app = Flask(__name__, template_folder="../templates", static_folder="../static")
 # Use platform-specific database path
 if platform.system() == "Windows":
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sarees.db'
+    db_path = os.path.join(os.getcwd(), 'sarees.db')
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/sarees.db'
+    db_path = '/tmp/sarees.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key'
-# Use /tmp/shorts for uploads on Vercel
-app.config['UPLOAD_FOLDER'] = '/tmp/shorts' if platform.system() != "Windows" else 'static/shorts'
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # Max 100MB
 db = SQLAlchemy(app)
-
-# Check if upload folder exists
-if platform.system() != "Windows" and not os.path.exists(app.config['UPLOAD_FOLDER']):
-    try:
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        logger.debug(f"Created upload folder: {app.config['UPLOAD_FOLDER']}")
-    except OSError as e:
-        logger.error(f"Failed to create upload folder: {e}")
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -39,80 +30,48 @@ class Product(db.Model):
     stock = db.Column(db.Integer, nullable=False)
     image_path = db.Column(db.String(200))
 
-class Short(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    video_path = db.Column(db.String(200), nullable=False)
-    uploaded_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_name = db.Column(db.String(100), nullable=False)
-
 # Initialize database before first request
 with app.app_context():
     try:
-        logger.debug("Creating database tables")
+        logger.debug(f"Checking database at: {db_path}")
+        if not os.path.exists(db_path):
+            logger.debug("Database file does not exist, creating new one")
         db.create_all()
+        # Verify table creation
+        if inspect(db.engine).has_table('product'):
+            logger.debug("Product table exists")
+        else:
+            logger.error("Product table not created")
+            db.create_all()  # Try again
+        # Add sample data if no products exist
         if not Product.query.first():
             db.session.add_all([
-                Product(name="Red Banarasi Saree", category="Saree", fabric="Silk", price=5000, stock=10, image_path="/static/images/products/red_banarasi.jpg"),
+                Product(name="Green Plain Saree", category="Saree", fabric="Crush Material", price=700, stock=2, image_path="/static/images/products/green_plain_saree.jpg"),
                 Product(name="Blue Cotton Chudi", category="Chudi", fabric="Cotton", price=1500, stock=25, image_path="/static/images/products/blue_chudi.jpg"),
                 Product(name="White Nighty", category="Nighty", fabric="Cotton", price=800, stock=15, image_path="/static/images/products/white_nighty.jpg"),
                 Product(name="Embroidered Blouse", category="Blouse", fabric="Silk", price=1200, stock=8, image_path="/static/images/products/embroidered_blouse.jpg")
             ])
             db.session.commit()
             logger.debug("Added sample products")
+        else:
+            logger.debug("Products already exist in database")
     except Exception as e:
         logger.error(f"Database initialization error: {e}")
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def home():
     try:
         logger.debug("Entering home route")
-        # Delete shorts older than 24 hours
-        expiry_time = datetime.utcnow() - timedelta(hours=24)
-        old_shorts = Short.query.filter(Short.uploaded_at < expiry_time).all()
-        logger.debug(f"Found {len(old_shorts)} old shorts")
-        for short in old_shorts:
+        # Delete products with stock = 0
+        sold_products = Product.query.filter(Product.stock == 0).all()
+        for product in sold_products:
             try:
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], os.path.basename(short.video_path))
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                    logger.debug(f"Deleted file: {file_path}")
+                logger.debug(f"Deleting sold product: {product.name}")
+                db.session.delete(product)
             except Exception as e:
-                logger.error(f"Error deleting short: {e}")
-            db.session.delete(short)
+                logger.error(f"Error deleting product {product.name}: {e}")
         db.session.commit()
-        logger.debug("Deleted old shorts")
-
-        # Check if max 10 shorts reached for today
-        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        daily_shorts = Short.query.filter(Short.uploaded_at >= today).count()
-        can_upload = daily_shorts < 10
-        logger.debug(f"Daily shorts: {daily_shorts}, Can upload: {can_upload}")
-
-        # Handle video upload
-        if request.method == 'POST' and 'video' in request.files and can_upload:
-            video = request.files['video']
-            user_name = request.form.get('user_name')
-            logger.debug(f"Video upload attempt: {video.filename if video else 'None'}, User: {user_name}")
-            if video and user_name:
-                if video.filename.endswith('.mp4'):
-                    filename = f"short_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{video.filename}"
-                    video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    try:
-                        video.save(video_path)
-                        db_path = f"/shorts/{filename}" if platform.system() != "Windows" else f"/static/shorts/{filename}"
-                        new_short = Short(video_path=db_path, user_name=user_name)
-                        db.session.add(new_short)
-                        db.session.commit()
-                        logger.debug(f"Uploaded short: {db_path}")
-                        flash('Short uploaded successfully!', 'success')
-                    except Exception as e:
-                        logger.error(f"Upload failed: {e}")
-                        flash(f'Upload failed: {e}', 'error')
-                else:
-                    flash('Only MP4 videos allowed!', 'error')
-            else:
-                flash('Please provide a name and video!', 'error')
-            return redirect(url_for('home'))
+        logger.debug(f"Deleted {len(sold_products)} sold products")
 
         # Get categories and featured products
         categories = db.session.query(Product.category).distinct().all()
@@ -120,12 +79,50 @@ def home():
         logger.debug(f"Categories: {categories}")
         featured_products = Product.query.limit(4).all()
         logger.debug(f"Featured products: {len(featured_products)}")
-        shorts = Short.query.order_by(Short.uploaded_at.desc()).all()
-        logger.debug(f"Shorts: {len(shorts)}")
 
-        return render_template('index.html', categories=categories, featured_products=featured_products, shorts=shorts, can_upload=can_upload)
+        return render_template('index.html', categories=categories, featured_products=featured_products)
     except Exception as e:
         logger.error(f"Error in home route: {e}")
+        raise
+
+@app.route('/category/plain_saree', methods=['GET'])
+def plain_saree():
+    try:
+        logger.debug("Entering plain_saree route")
+        plain_sarees = Product.query.filter(Product.category == 'Saree', Product.fabric.like('%Crush Material%')).all()
+        logger.debug(f"Plain sarees: {len(plain_sarees)}")
+        return render_template('plain_saree.html', plain_sarees=plain_sarees)
+    except Exception as e:
+        logger.error(f"Error in plain_saree route: {e}")
+        raise
+
+@app.route('/category/silk_saree', methods=['GET'])
+def silk_saree():
+    try:
+        logger.debug("Entering silk_saree route")
+        return render_template('silk_saree.html')
+    except Exception as e:
+        logger.error(f"Error in silk_saree route: {e}")
+        raise
+
+@app.route('/category/cotton_saree', methods=['GET'])
+def cotton_saree():
+    try:
+        logger.debug("Entering cotton_saree route")
+        return render_template('cotton_saree.html')
+    except Exception as e:
+        logger.error(f"Error in cotton_saree route: {e}")
+        raise
+
+@app.route('/category/<category>', methods=['GET'])
+def category(category):
+    try:
+        logger.debug(f"Entering category route for {category}")
+        products = Product.query.filter_by(category=category).all()
+        logger.debug(f"Products in {category}: {len(products)}")
+        return render_template('category.html', category=category, products=products)
+    except Exception as e:
+        logger.error(f"Error in category route: {e}")
         raise
 
 if __name__ == '__main__':
