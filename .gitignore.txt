@@ -1,6 +1,0 @@
-__pycache__/
-*.pyc
-sarees.db
-venv/
-.env
-*.db
