@@ -91,7 +91,7 @@ def add_products():
                     'fabric': 'Crush Material',
                     'price': 700.0,
                     'stock': 2,
-                    'image_path': '/static/images/products/pin_plain_saree.jpg'
+                    'image_path': '/static/images/products/pink_plain_saree.jpg'
                 }
             ]
             for product_data in products:
