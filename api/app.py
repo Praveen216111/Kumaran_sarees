@@ -47,9 +47,9 @@ with app.app_context():
         if not Product.query.first():
             db.session.add_all([
                 Product(name="Green Plain Saree", category="Saree", fabric="Crush Material", price=700, stock=2, image_path="/static/images/products/green_plain_saree.jpg"),
-                Product(name="Blue Cotton Chudi", category="Chudi", fabric="Cotton", price=1500, stock=25, image_path="/static/images/products/blue_chudi.jpg"),
-                Product(name="White Nighty", category="Nighty", fabric="Cotton", price=800, stock=15, image_path="/static/images/products/white_nighty.jpg"),
-                Product(name="Embroidered Blouse", category="Blouse", fabric="Silk", price=1200, stock=8, image_path="/static/images/products/embroidered_blouse.jpg")
+                Product(name="Pink Plain Saree", category="Saree", fabric="Crush Material", price=700, stock=5, image_path="/static/images/products/pink_plain_saree.jpg"),
+                Product(name="Yellow Plain Saree", category="Saree", fabric="Crush Material", price=700, stock=5, image_path="/static/images/products/yellow_plain_saree.jpg"),
+                Product(name="Rose Plain Saree", category="Saree", fabric="Crush Material", price=700, stock=8, image_path="/static/images/products/rose_plain_saree.jpg")
             ])
             db.session.commit()
             logger.debug("Added sample products")
