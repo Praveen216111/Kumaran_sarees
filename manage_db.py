@@ -47,34 +47,62 @@ def create_product_table():
 def delete_blue_chudi():
     with app.app_context():
         try:
-            red_saree = Product.query.filter_by(name='Rose Plain Saree').first()
-            if red_saree:
+            blue_chudi = Product.query.filter_by(name='Blue Cotton Chudi').first()
+            if blue_chudi:
                 logger.debug("Deleting Blue Cotton Chudi")
-                db.session.delete(red_saree)
+                db.session.delete(blue_chudi)
                 db.session.commit()
             else:
                 logger.debug("Blue Cotton Chudi not found")
         except Exception as e:
             logger.error(f"Error deleting Blue Cotton Chudi: {e}")
-def add_green_saree():
+
+def add_products():
     with app.app_context():
         try:
-            if not Product.query.filter_by(name='Rose Plain Saree').first():
-                new_product = Product(
-                    name="Rose Plain Saree",
-                    category="Saree",
-                    fabric="Crush Material",
-                    price=700.0,
-                    stock=2,
-                    image_path="/static/images/products/rose_plain_saree.jpg"
-                )
-                db.session.add(new_product)
-                db.session.commit()
-                logger.debug("Added Pink Plain Saree")
-            else:
-                logger.debug("Pink Plain Saree already exists")
+            products = [
+                {
+                    'name': 'Rose Plain Saree',
+                    'category': 'Saree',
+                    'fabric': 'Crush Material',
+                    'price': 700.0,
+                    'stock': 2,
+                    'image_path': '/static/images/products/rose_plain_saree.jpg'
+                },
+                {
+                    'name': 'Yellow Plain Saree',
+                    'category': 'Saree',
+                    'fabric': 'Crush Material',
+                    'price': 700.0,
+                    'stock': 2,
+                    'image_path': '/static/images/products/yellow_plain_saree.jpg'
+                },
+                {
+                    'name': 'Green Plain Saree',
+                    'category': 'Saree',
+                    'fabric': 'Crush Material',
+                    'price': 700.0,
+                    'stock': 5,
+                    'image_path': '/static/images/products/green_plain_saree.jpg'
+                },
+                {
+                    'name': 'Pink Plain Saree',
+                    'category': 'Saree',
+                    'fabric': 'Crush Material',
+                    'price': 700.0,
+                    'stock': 2,
+                    'image_path': '/static/images/products/pin_plain_saree.jpg'
+                }
+            ]
+            for product_data in products:
+                if not Product.query.filter_by(name=product_data['name']).first():
+                    new_product = Product(**product_data)
+                    db.session.add(new_product)
+                    logger.debug(f"Added {product_data['name']}")
+            db.session.commit()
         except Exception as e:
-            logger.error(f"Error adding Pink Plain Saree: {e}")
+            logger.error(f"Error adding products: {e}")
+            db.session.rollback()
 
 def delete_sold_sarees():
     with app.app_context():
@@ -92,4 +120,4 @@ if __name__ == "__main__":
     create_product_table()
     delete_blue_chudi()
     delete_sold_sarees()
-    add_green_saree()
+    add_products()
