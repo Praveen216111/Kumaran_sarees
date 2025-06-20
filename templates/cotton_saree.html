@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cotton Sarees - Kumaran Sarees</title>
+    <title>Plain Sarees - Kumaran Sarees</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -20,19 +20,97 @@
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
+            position: relative;
         }
         .header h1 {
             font-family: 'Playfair Display', serif;
             font-size: 2.5rem;
             margin: 0;
         }
-        .message {
-            font-size: 1.5rem;
+        .whatsapp-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #25D366;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .whatsapp-icon {
+            background: #25D366;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .category-link {
+            background: #ad1457;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .category-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            background: #880e4f;
+        }
+        .dropdown-menu {
+            background: #ad1457;
+            border: none;
+        }
+        .dropdown-item {
+            color: white;
+        }
+        .dropdown-item:hover {
+            background: #880e4f;
+            color: white;
+        }
+        .product-card {
+            border: 2px solid #d81b60;
+            border-radius: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            background: white;
+            overflow: hidden;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+        .product-img {
+            max-width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+        .card-body {
+            padding: 15px;
+        }
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            color: #7b1fa2;
+            font-size: 1.2rem;
+        }
+        footer {
             text-align: center;
-            margin-top: 50px;
+            padding: 20px;
+            background: #f8f8f8;
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
         }
         @media (max-width: 576px) {
             .header h1 { font-size: 1.8rem; }
+            .product-img { height: 150px; }
+            .whatsapp-button { padding: 8px 15px; font-size: 0.9rem; }
         }
     </style>
 </head>
@@ -41,11 +119,74 @@
         <!-- Header -->
         <div class="header">
             <h1>Cotton Sarees</h1>
-            <p>Explore our collection of comfortable cotton sarees!</p>
+            <p>Explore our collection of elegant cotton sarees!</p>
+            <a href="https://wa.me/+916369535994?text=Hi%20Kumaran%20Sarees%2C%20I%27m%20interested%20in%20your%20products!"
+               target="_blank" class="whatsapp-button">
+                <img src="/static/images/whatsapp.png" alt="WhatsApp" style="width:30px; height:30px;">
+                Contact Us
+            </a>
         </div>
 
-        <!-- Message -->
-        <p class="message">Will update soon</p>
+        <!-- Categories -->
+        <div class="my-4 text-center">
+            <h3>Browse by Category</h3>
+            {% for category in categories %}
+                {% if category == 'Saree' %}
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn category-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            Saree
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/category/plain_saree">Plain Saree</a></li>
+                            <li><a class="dropdown-item" href="/category/silk_saree">Silk Saree</a></li>
+                            <li><a class="dropdown-item" href="/category/cotton_saree">Cotton Saree</a></li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a href="/category/{{ category }}" class="btn category-link">{{ category }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Plain Sarees -->
+        <h3 class="text-center">Available Cotton Sarees</h3>
+        {% if cotton_sarees %}
+            <div class="row">
+                {% for product in cotton_sarees %}
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <div class="product-card">
+                            {% if product.image_path %}
+                                <img src="{{ product.image_path }}" class="product-img" alt="{{ product.name }}">
+                            {% else %}
+                                <img src="/static/images/placeholder.jpg" class="product-img" alt="Placeholder">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p class="card-text">
+                                    Category: {{ product.category }}<br>
+                                    Fabric: {{ product.fabric or 'N/A' }}<br>
+                                    Price: ₹{{ product.price | round(2) }}<br>
+                                    Stock: {{ product.stock }}
+                                </p>
+                                <a href="https://wa.me/+916369535994?text=I%27m%20interested%20in%20{{ product.name }}%2C%20Price%3A%20%E2%82%B9{{ product.price | round(2) }}"
+                                   target="_blank" class="whatsapp-icon">
+                                    <img src="/static/images/whatsapp.png" alt="WhatsApp" style="width:25px; height:25px;">
+                                    Inquire
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center">No cotton sarees available at the moment.</p>
+        {% endif %}
+
+        <!-- Footer -->
+        <footer>
+            <p><strong>Address:</strong> Kumaran Sarees, Savadi Street,Uthukottai, Tamil Nadu 602026</p>
+            <p><strong>Contact:</strong> +916369535994</p>
+        </footer>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

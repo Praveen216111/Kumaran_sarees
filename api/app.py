@@ -46,10 +46,12 @@ with app.app_context():
         # Add sample data if no products exist
         if not Product.query.first():
             db.session.add_all([
-                Product(name="Green Plain Saree", category="Saree", fabric="Crush Material", price=700, stock=2, image_path="/static/images/products/green_plain_saree.jpg"),
-                Product(name="Pink Plain Saree", category="Saree", fabric="Crush Material", price=700, stock=5, image_path="/static/images/products/pink_plain_saree.jpg"),
-                Product(name="Yellow Plain Saree", category="Saree", fabric="Crush Material", price=700, stock=5, image_path="/static/images/products/yellow_plain_saree.jpg"),
-                Product(name="Rose Plain Saree", category="Saree", fabric="Crush Material", price=700, stock=8, image_path="/static/images/products/rose_plain_saree.jpg")
+                Product(name="Green Plain Saree", category="Plain Saree", fabric="Crush Material", price=700, stock=2, image_path="/static/images/products/green_plain_saree.jpg"),
+                Product(name="Pink Plain Saree", category="Plain Saree", fabric="Crush Material", price=700, stock=5, image_path="/static/images/products/pink_plain_saree.jpg"),
+                Product(name="Yellow Plain Saree", category="Plain Saree", fabric="Crush Material", price=700, stock=5, image_path="/static/images/products/yellow_plain_saree.jpg"),
+                Product(name="Rose Plain Saree", category="Plain Saree", fabric="Crush Material", price=700, stock=8, image_path="/static/images/products/rose_plain_saree.jpg"),
+                Product(name="Blue Silk Saree", category="Silk Saree", fabric="Silk", price=1500, stock=3, image_path="/static/images/products/blue_silk_saree.jpg"),
+                Product(name="White Cotton Saree", category="Cotton Saree", fabric="Cotton", price=900, stock=4, image_path="/static/images/products/white_cotton_saree.jpg")
             ])
             db.session.commit()
             logger.debug("Added sample products")
@@ -73,14 +75,11 @@ def home():
         db.session.commit()
         logger.debug(f"Deleted {len(sold_products)} sold products")
 
-        # Get categories and featured products
-        categories = db.session.query(Product.category).distinct().all()
-        categories = [cat[0] for cat in categories]
-        logger.debug(f"Categories: {categories}")
+        # Get featured products
         featured_products = Product.query.limit(4).all()
         logger.debug(f"Featured products: {len(featured_products)}")
 
-        return render_template('index.html', categories=categories, featured_products=featured_products)
+        return render_template('index.html', featured_products=featured_products)
     except Exception as e:
         logger.error(f"Error in home route: {e}")
         raise
@@ -89,7 +88,7 @@ def home():
 def plain_saree():
     try:
         logger.debug("Entering plain_saree route")
-        plain_sarees = Product.query.filter(Product.category == 'Saree', Product.fabric.like('%Crush Material%')).all()
+        plain_sarees = Product.query.filter_by(category='Plain Saree').all()
         logger.debug(f"Plain sarees: {len(plain_sarees)}")
         return render_template('plain_saree.html', plain_sarees=plain_sarees)
     except Exception as e:
@@ -100,7 +99,9 @@ def plain_saree():
 def silk_saree():
     try:
         logger.debug("Entering silk_saree route")
-        return render_template('silk_saree.html')
+        silk_sarees = Product.query.filter_by(category='Silk Saree').all()
+        logger.debug(f"Silk sarees: {len(silk_sarees)}")
+        return render_template('silk_saree.html', silk_sarees=silk_sarees)
     except Exception as e:
         logger.error(f"Error in silk_saree route: {e}")
         raise
@@ -109,20 +110,11 @@ def silk_saree():
 def cotton_saree():
     try:
         logger.debug("Entering cotton_saree route")
-        return render_template('cotton_saree.html')
+        cotton_sarees = Product.query.filter_by(category='Cotton Saree').all()
+        logger.debug(f"Cotton sarees: {len(cotton_sarees)}")
+        return render_template('cotton_saree.html', cotton_sarees=cotton_sarees)
     except Exception as e:
         logger.error(f"Error in cotton_saree route: {e}")
-        raise
-
-@app.route('/category/<category>', methods=['GET'])
-def category(category):
-    try:
-        logger.debug(f"Entering category route for {category}")
-        products = Product.query.filter_by(category=category).all()
-        logger.debug(f"Products in {category}: {len(products)}")
-        return render_template('category.html', category=category, products=products)
-    except Exception as e:
-        logger.error(f"Error in category route: {e}")
         raise
 
 if __name__ == '__main__':

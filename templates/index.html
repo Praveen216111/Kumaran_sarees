@@ -64,17 +64,6 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             background: #880e4f;
         }
-        .dropdown-menu {
-            background: #ad1457;
-            border: none;
-        }
-        .dropdown-item {
-            color: white;
-        }
-        .dropdown-item:hover {
-            background: #880e4f;
-            color: white;
-        }
         .product-card {
             border: 2px solid #d81b60;
             border-radius: 10px;
@@ -131,8 +120,7 @@
         <!-- Header -->
         <div class="header">
             <h1>KUMARAN SAREES</h1>
-            <p>Explore our vibrant collection of Sarees, Chudis, Nighties, Blouses, and more!</p>
-            
+            <p>Explore our vibrant collection of Sarees!</p>
         </div>
 
         <!-- Flash Messages -->
@@ -144,25 +132,14 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Categories -->
+        <!-- Category Buttons -->
         <div class="my-4 text-center">
-            <h3>Browse by Category</h3>
-            {% for category in categories %}
-                {% if category == 'Saree' %}
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn category-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            Saree
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/category/plain_saree">Plain Saree</a></li>
-                            <li><a class="dropdown-item" href="/category/silk_saree">Silk Saree</a></li>
-                            <li><a class="dropdown-item" href="/category/cotton_saree">Cotton Saree</a></li>
-                        </ul>
-                    </div>
-                {% else %}
-                    <a href="/category/{{ category }}" class="btn category-link">{{ category }}</a>
-                {% endif %}
-            {% endfor %}
+            <h3>Browse Sarees</h3>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/category/plain_saree" class="btn category-link">Plain Saree</a>
+                <a href="/category/cotton_saree" class="btn category-link">Cotton Saree</a>
+                <a href="/category/silk_saree" class="btn category-link">Silk Saree</a>
+            </div>
         </div>
 
         <!-- Featured Products -->

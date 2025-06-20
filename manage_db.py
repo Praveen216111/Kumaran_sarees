@@ -47,7 +47,7 @@ def create_product_table():
 def delete_blue_chudi():
     with app.app_context():
         try:
-            blue_chudi = Product.query.filter_by(name='Blue Cotton Chudi').first()
+            blue_chudi = Product.query.filter_by(name='Yellow Cotton Saree Without Blouse1').first()
             if blue_chudi:
                 logger.debug("Deleting Blue Cotton Chudi")
                 db.session.delete(blue_chudi)
@@ -62,36 +62,76 @@ def add_products():
         try:
             products = [
                 {
-                    'name': 'Rose Plain Saree',
-                    'category': 'Saree',
-                    'fabric': 'Crush Material',
-                    'price': 700.0,
+                    'name': 'Pink Cotton Saree Without Blouse1',
+                    'category': 'Cotton Saree',
+                    'fabric': 'Cotton',
+                    'price': 500.0,
                     'stock': 2,
-                    'image_path': '/static/images/products/rose_plain_saree.jpg'
+                    'image_path': '/static/images/products/pink_cotton_saree_without_blouse.jpg'
                 },
                 {
-                    'name': 'Yellow Plain Saree',
-                    'category': 'Saree',
-                    'fabric': 'Crush Material',
-                    'price': 700.0,
+                    'name': 'Rose Cotton Saree Without Blouse2',
+                    'category': 'Cotton Saree',
+                    'fabric': 'Cotton',
+                    'price': 500.0,
                     'stock': 2,
-                    'image_path': '/static/images/products/yellow_plain_saree.jpg'
+                    'image_path': '/static/images/products/rose_cotton_saree_without_blouse.jpg'
                 },
                 {
-                    'name': 'Green Plain Saree',
-                    'category': 'Saree',
-                    'fabric': 'Crush Material',
-                    'price': 700.0,
-                    'stock': 5,
-                    'image_path': '/static/images/products/green_plain_saree.jpg'
+                    'name': 'Sky Blue Cotton Saree Without Blouse3',
+                    'category': 'Cotton Saree',
+                    'fabric': 'Cotton',
+                    'price': 500.0,
+                    'stock': 2,
+                    'image_path': '/static/images/products/sky_cotton_saree_without_blouse3.jpg'
                 },
                 {
-                    'name': 'Pink Plain Saree',
-                    'category': 'Saree',
-                    'fabric': 'Crush Material',
+                    'name': 'Sky Cotton Saree With Blouse',
+                    'category': 'Cotton Saree',
+                    'fabric': 'Cotton',
                     'price': 700.0,
                     'stock': 2,
-                    'image_path': '/static/images/products/pink_plain_saree.jpg'
+                    'image_path': '/static/images/products/sky_cotton_saree_with_blouse.jpg'
+                },
+                {
+                    'name': 'Sky Cotton Saree With Blouse1',
+                    'category': 'Cotton Saree',
+                    'fabric': 'Cotton',
+                    'price': 700.0,
+                    'stock': 2,
+                    'image_path': '/static/images/products/sky_cotton_saree_with_blouse2.jpg'
+                },
+                {
+                    'name': 'Sky Cotton Saree With Blouse2',
+                    'category': 'Cotton Saree',
+                    'fabric': 'Cotton',
+                    'price': 700.0,
+                    'stock': 2,
+                    'image_path': '/static/images/products/sky_cotton_saree_with_blouse3.jpg'
+                },
+                {
+                    'name': 'Yellow Cotton Saree With Blouse',
+                    'category': 'Cotton Saree',
+                    'fabric': 'Cotton',
+                    'price': 700.0,
+                    'stock': 2,
+                    'image_path': '/static/images/products/yellow_cotton_saree_with_blouse.jpg'
+                },
+                {
+                    'name': 'Yellow Cotton Saree Without Blouse',
+                    'category': 'Cotton Saree',
+                    'fabric': 'Cotton',
+                    'price': 500.0,
+                    'stock': 2,
+                    'image_path': '/static/images/products/yellow_cotton_saree_without_blouse.jpg'
+                },
+                {
+                    'name': 'Yellow Cotton Saree Without Blouse1',
+                    'category': 'Cotton Saree',
+                    'fabric': 'Cotton',
+                    'price': 500.0,
+                    'stock': 2,
+                    'image_path': '/static/images/products/yellow_cotton_saree_without_blouse1.jpg'
                 }
             ]
             for product_data in products:
