@@ -1,6 +1,6 @@
 .idea/
-
-
+*.db
+temp/sarees.db
 __pycache__/
 .venv/ 
 instances/sarees.db 
