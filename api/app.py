@@ -30,35 +30,7 @@ class Product(db.Model):
     stock = db.Column(db.Integer, nullable=False)
     image_path = db.Column(db.String(200))
 
-# Initialize database before first request
-with app.app_context():
-    try:
-        logger.debug(f"Checking database at: {db_path}")
-        if not os.path.exists(db_path):
-            logger.debug("Database file does not exist, creating new one")
-        db.create_all()
-        # Verify table creation
-        if inspect(db.engine).has_table('product'):
-            logger.debug("Product table exists")
-        else:
-            logger.error("Product table not created")
-            db.create_all()  # Try again
-        # Add sample data if no products exist
-        if not Product.query.first():
-            db.session.add_all([
-                Product(name="Green Plain Saree", category="Plain Saree", fabric="Crush Material", price=700, stock=2, image_path="/static/images/products/green_plain_saree.jpg"),
-                Product(name="Pink Plain Saree", category="Plain Saree", fabric="Crush Material", price=700, stock=5, image_path="/static/images/products/pink_plain_saree.jpg"),
-                Product(name="Yellow Plain Saree", category="Plain Saree", fabric="Crush Material", price=700, stock=5, image_path="/static/images/products/yellow_plain_saree.jpg"),
-                Product(name="Rose Plain Saree", category="Plain Saree", fabric="Crush Material", price=700, stock=8, image_path="/static/images/products/rose_plain_saree.jpg"),
-                Product(name="Blue Silk Saree", category="Silk Saree", fabric="Silk", price=1500, stock=3, image_path="/static/images/products/blue_silk_saree.jpg"),
-                Product(name="White Cotton Saree", category="Cotton Saree", fabric="Cotton", price=900, stock=4, image_path="/static/images/products/white_cotton_saree.jpg")
-            ])
-            db.session.commit()
-            logger.debug("Added sample products")
-        else:
-            logger.debug("Products already exist in database")
-    except Exception as e:
-        logger.error(f"Database initialization error: {e}")
+
 
 @app.route('/', methods=['GET'])
 def home():

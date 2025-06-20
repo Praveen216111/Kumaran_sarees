@@ -5,4 +5,4 @@ __pycache__/
 .venv/ 
 instances/sarees.db 
 instances/sarees.db 
-sarees.db 
+instance/sarees.db
